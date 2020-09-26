@@ -3,11 +3,12 @@ menu_s:  .asciiz "Menú de opciones disponibles:\n1. Leer una frase\n2. Converti
 end_s:  .asciiz "Terminado. \nDesarrollado por Roberto Sánchez Cárdenas - B77059 - IE-0321\n\n"
 error_s: .asciiz "\n***Error. Opción no disponible. Por favor ingrese un número de opción válido.***\n\n"
 op1_s: .asciiz "\nAcción: Leer una frase\n\nIngrese algún texto con solo letras sin acentos de tamaño válido: "
-op2_s: .asciiz "\nAcción: Convertir primera letra de cada palabra en mayúscula\n"
-op3_s: .asciiz "\nAcción: Invetir orden de las palabras\n"
-op4_s: .asciiz "\nAcción: Pasar todas las mayúsculas a minúsculas y viceversa\n"
+op2_s: .asciiz "\nAcción: Convertir primera letra de cada palabra en mayúscula\n\nFrase a modificar: "
+op3_s: .asciiz "\nAcción: Invetir orden de las palabras\n\nFrase a modificar: "
+op4_s: .asciiz "\nAcción: Pasar todas las mayúsculas a minúsculas y viceversa\n\nFrase a modificar: "
 op1_exito: .asciiz "Frase leida con éxito, se usará para las operaciones seleccionadas."
-entrada: .asciiz "los perros son excelentes mascotas"
+op_final: .asciiz "\nFrase modificada: "
+entrada: .asciiz "lOs PerrOs son mUy lindOs\n"
 coma: .asciiz ""
 cierra: .asciiz ""
 enter: .asciiz ""
@@ -32,7 +33,7 @@ menu:
 	slti $t1, $v0, 5
 	bne $t0, $t1, error
 
-	la $v1, entrada				# C
+	la $v1, entrada				# Entrada es mensaje de interes
 	
 	##### Hasta este punto traigo main en $ra, se hace tipo switch case#####
 	li $t0, 1					# Cargamos numero de opción
@@ -86,51 +87,53 @@ opcion1:
 		#Si tamano no válido, vuelve a pedir frase
 		j opcion1
 
-opcion2:							#Traemos frase en v1
-	li $v0, 4
+opcion2:							#Traemos frase en v1, demás registros no importan
+	li $v0, 4						#Opcion 2
 	la $a0, op2_s
 	syscall
 
-	lbu $a0, 0($v1)					#Guardamos inicio en a0
-	
-	li $t1, 96
-	slt $t3, $t1, $a0
-	slti $t4, $a0, 'z'
-	beq $t3, $t4, cambio_min_mayusc
+	move $a0, $v1
+	syscall
 
-	li $t5, 32						#Cargamos decimal de espacio 0x20
-	jal busca_espacio
+	addi $t0, $0, 'a'				#Cargo a para comparar
+	addi $t4, $0, 32				#Cargo espacio
+	addi $t5, $t5, 10				#Line feed, EOL
 
-
-	j main
+	lbu $a0, 0($v1)					#Cargo primer char de mensaje de interes
+	j check_case
 
 
-	busca_espacio:
-		lbu $a0, 0($v1)
-		beq $a0, $t5, inicio_palabras
-		addi $v1, $v1, 1
-		j busca_espacio
+
+	check_case:						#revisa si letra es minuscula o espacio
+		slt $t2, $t0, $a0
+		slti $t3, $a0, 'z'
+		beq $t2, $t3, cambio
+
+		j incremento				#Me carga el char actual y el siguiente
 
 
-	inicio_palabras:				#Buscamos las palabras después de un espacio
-		addi $v1, $v1, 1
-		lbu $a0, 0($v1)
-		slt $t3, $t1, $a0
-		slti $t4, $a0, 'z'
-		beq $t3, $t4, cambio_min_mayusc
-
-	cambio_min_mayusc:				#Acá se hacen los cambios de minuscula a minuscula
+	cambio:							#Se pasa de min a mayusc
 		andi $a0, $a0, 223
-		li $v0, 11
+		sb $a0, 0($v1)				#Se guarda el cambio en entrada
+
+		j incremento
+
+	incremento:
+		lbu $t1, 0($v1)					#Cargamos el char actual y el siguiente
+		lbu $a0, 1($v1)
+		addi $v1, $v1, 1
+
+		beq $t1, $t4, check_case		#Vemos si el actual es un espacio y revisamos si el siguiente es letra min
+		beq $a0, $t5, finaliza_op2
+		j incremento					#Si no, incrementamos
+
+	finaliza_op2:						#Se imprime el final y vuelve a main
+		li $v0, 4
+		la $a0, op_final
 		syscall
-
-		li $v0, 10
+		la $a0, entrada
 		syscall
-		
-		jr $ra
-
-	aumenta:
-
+		j main
 
 
 opcion3:
@@ -143,4 +146,52 @@ opcion4:
 	li $v0, 4
 	la $a0, op4_s
 	syscall
-	jr $ra
+	la $a0, entrada
+	syscall
+
+	addi $t0, $0, 'a'				#Cargo a para comparar
+	addi $t1, $t1, 'A'
+
+	addi $t4, $0, 32				#Cargo espacio
+	addi $t5, $t5, 10				#Line feed, EOL
+
+	j check_case_v2
+
+		check_case_v2:					#revisa si letra es minuscula o espacio
+			lbu $a0, 0($v1)
+			slt $t2, $t0, $a0
+			slti $t3, $a0, 'z'
+			beq $t2, $t3, cambio_min_may
+
+			slt $t2, $t1, $a0
+			slti $t3, $a0, 'Z'
+			beq $t2, $t3, cambio_may_min
+
+			j incremento_op4				#Me carga el char actual y el siguiente
+
+		cambio_min_may:
+			andi $a0, $a0, 223
+			sb $a0, 0($v1)
+			li $v0, 11
+			syscall
+			j incremento_op4
+
+		cambio_may_min:
+			ori $a0, $a0, 32
+			sb $a0, 0($v1)
+			li $v0, 11
+			syscall
+			j incremento_op4
+
+		incremento_op4:
+			addi $v1, $v1, 1
+			beq $a0, $t5, finaliza_op4
+			j check_case_v2
+
+		finaliza_op4:
+			li $v0, 4
+			la $a0, op_final
+			syscall
+			la $a0, entrada
+			syscall
+			j main
