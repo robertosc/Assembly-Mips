@@ -15,8 +15,8 @@ int sequence(int n)
 // Driver Program 
 int main() 
 { 
-    int n = 10; 
-    for (int i = 0; i<=10; i++){
+    int n = 100; 
+    for (int i = 0; i<=n; i++){
     cout << sequence(i); 
     }
     return 0; 

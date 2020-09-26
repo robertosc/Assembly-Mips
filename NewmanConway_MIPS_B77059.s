@@ -14,14 +14,18 @@
 #		P(n) = P(P(n-1)) + P(n-P(n-1)) n>2
 #                                                               
 #       Si se introducen valores validos de n (n>0), se imprime   
-#       el resultado de la sucesión en consola.                             
+#       el resultado de la sucesión en consola. El programa se 
+#		probó hasta con un n=100 y no tuvo problema mas no fue
+#		muy rápido en el simulador utilizado. Se comparó el 
+#		resultado con un programa escrito en c++ y los resultados
+#		concuerdan.                           
 #                                                                
 
 
 .data 				#Se debe poner antes de definir variables
 str:  .asciiz "Ingrese el número (n) hasta el que desea calcular la sucesión de Newman-Conway: "
 str1:  .asciiz "Retorno 1\n"
-str2:  .asciiz "Terminado. \nDesarrollado por Roberto Sánchez Cárdenas - B77059 - IE-0321"
+str2:  .asciiz "Terminado. \nDesarrollado por Roberto Sánchez Cárdenas - B77059 - IE-0321\n\n"
 str3: .asciiz "Suma\n"
 str4: .asciiz "enter:"
 abre: .asciiz "\nLa sucesión de Newman-Canway de 0 a n viene dada por:\n\n{"
@@ -42,7 +46,7 @@ main:
 	slt $t0, $v0, $0		#Comprobamos que sea un numero positivo
 	bne $t0, $0, exit		#salimos
 	
-	move $t1, $v0			#t1 modificable
+					#t1 modificable
 	move $t0, $v0
 	
 	jal save_main
@@ -135,7 +139,7 @@ save_main:
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 
-	li $t5, 0				#Cargamos t5 = 0 para hacer while
+	li $t5, 0				#Cargamos i = t5 = 0 para hacer while
 
 	j loop
 
