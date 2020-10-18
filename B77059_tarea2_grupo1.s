@@ -105,6 +105,8 @@ opcion2:									#Traemos frase en v1, demás registros no importan
 
 	addi $t0, $0, 96#'a'					#Cargo a para comparar
 	addi $t4, $0, 32						#Cargo espacio
+	addi $t6, $0, 64#antes A
+
 	addi $t5, $0, 10						#Line feed, EOL
 
 	lbu $a0, 0($v1)							#Cargo primer char de mensaje de interes
@@ -132,6 +134,11 @@ opcion2:									#Traemos frase en v1, demás registros no importan
 		#sb $a0, 0($v1)				#Se guarda el cambio en entrada
 		j incremento
 
+	cambio_2:						#Cambia de may a min
+		ori $a0, $a0, 32
+		j incremento
+	
+
 	incremento:	
 		syscall
 		lbu $t1, 0($v1)					#Cargamos el char actual y el siguiente
@@ -139,6 +146,11 @@ opcion2:									#Traemos frase en v1, demás registros no importan
 		addi $v1, $v1, 1
 
 		beq $t1, $t4, check_case		#Vemos si el actual es un espacio y revisamos si el siguiente es letra min
+		
+		slt $t2, $t6, $a0				#Reviso si es mayuscula para pasar a min
+		slti $t3, $a0, 91
+		beq $t2, $t3, cambio_2
+
 		beq $a0, $t5, finaliza_op2
 		j incremento					#Si no, incrementamos
 
